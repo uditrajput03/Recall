@@ -5,6 +5,15 @@
 ## User settings
 xcuserdata/
 
+## macOS system files
+.DS_Store
+*.swp
+*~
+
+## Environment & Secrets
+.env
+.env.*
+
 ## Obj-C/Swift specific
 *.hmap
 
