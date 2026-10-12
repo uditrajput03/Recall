@@ -1,0 +1,100 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release tag (e.g. v1.0.0 or v1.0.0-beta.1)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        type: boolean
+        default: false
+      draft:
+        description: 'Create draft release'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build & Release App
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve Release Metadata
+        id: release_meta
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.tag_name }}"
+            DRAFT="${{ github.event.inputs.draft }}"
+            if [ "${{ github.event.inputs.prerelease }}" = "true" ] || [[ "$TAG" == *"-"* ]]; then
+              PRERELEASE="true"
+            else
+              PRERELEASE="false"
+            fi
+          else
+            TAG="${GITHUB_REF_NAME}"
+            DRAFT="false"
+            if [[ "$TAG" == *"-"* ]]; then
+              PRERELEASE="true"
+            else
+              PRERELEASE="false"
+            fi
+          fi
+
+          # Remove leading 'v' for bundle short version
+          VERSION="${TAG#v}"
+
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "prerelease=${PRERELEASE}" >> "$GITHUB_OUTPUT"
+          echo "draft=${DRAFT}" >> "$GITHUB_OUTPUT"
+
+          echo "🚀 Tag: $TAG"
+          echo "📦 Version: $VERSION"
+          echo "🏷️ Pre-release: $PRERELEASE"
+          echo "📝 Draft: $DRAFT"
+
+      - name: Run Swift Unit Tests
+        run: swift test --parallel
+
+      - name: Build and Package Recall.app (Universal Binary)
+        run: |
+          ./build_app.sh "${{ steps.release_meta.outputs.version }}" --package
+
+      - name: Verify Distribution Artifacts
+        run: |
+          VERSION="${{ steps.release_meta.outputs.version }}"
+          test -f "dist/Recall-${VERSION}-macOS.zip"
+          test -f "dist/Recall-${VERSION}-macOS.dmg"
+          test -f "dist/checksums.txt"
+          cat "dist/checksums.txt"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release_meta.outputs.tag }}
+          name: Recall ${{ steps.release_meta.outputs.tag }}
+          draft: ${{ steps.release_meta.outputs.draft == 'true' }}
+          prerelease: ${{ steps.release_meta.outputs.prerelease == 'true' }}
+          generate_release_notes: true
+          target_commitish: ${{ github.sha }}
+          files: |
+            dist/Recall-*.zip
+            dist/Recall-*.dmg
+            dist/checksums.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

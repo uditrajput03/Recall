@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build & Test
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          echo "Using Xcode: $(xcode-select -p)"
+          swift --version
+
+      - name: Run Swift Unit Tests
+        run: swift test --parallel
+
+      - name: Build macOS App Bundle
+        run: ./build_app.sh 0.0.0-ci
+
+      - name: Verify App Bundle Structure
+        run: |
+          test -d Recall.app
+          test -f Recall.app/Contents/MacOS/Recall
+          test -f Recall.app/Contents/Info.plist
+          echo "Binary architectures:"
+          file Recall.app/Contents/MacOS/Recall

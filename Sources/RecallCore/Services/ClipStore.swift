@@ -62,11 +62,6 @@ public final class ClipStore {
         onItemsChanged?()
     }
     
-    public func removeItem(id: UUID) {
-        items.removeAll(where: { $0.id == id })
-        onItemsChanged?()
-    }
-    
     public func clearUnpinned() {
         items.removeAll(where: { !$0.isPinned })
         onItemsChanged?()
