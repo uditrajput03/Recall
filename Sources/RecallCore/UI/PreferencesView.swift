@@ -6,6 +6,10 @@ public struct PreferencesView: View {
     @State private var displayCount: Int
     @State private var launchAtLogin: Bool
     
+    private var appVersion: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
+    }
+    
     public init() {
         _rememberCount = State(initialValue: PreferencesManager.shared.rememberLimit)
         _displayCount = State(initialValue: PreferencesManager.shared.displayLimit)
@@ -14,10 +18,23 @@ public struct PreferencesView: View {
     
     public var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("General Settings")
-                .font(.headline)
-                .foregroundColor(.secondary)
-                .padding(.bottom, 2)
+            // Header with App Title and Version Badge
+            HStack(alignment: .center) {
+                Text("General Settings")
+                    .font(.headline)
+                    .foregroundColor(.secondary)
+                
+                Spacer()
+                
+                Text("v\(appVersion)")
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color.secondary.opacity(0.12))
+                    .cornerRadius(4)
+            }
+            .padding(.bottom, 2)
             
             VStack(spacing: 12) {
                 // Remember row

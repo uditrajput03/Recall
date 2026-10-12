@@ -26,15 +26,30 @@ jobs:
       - name: Run Swift Unit Tests
         run: swift test --parallel
 
-      - name: Build macOS App Bundle
-        run: ./build_app.sh 0.0.0-ci
+      - name: Build macOS App Bundle & Distribution Artifacts
+        run: ./build_app.sh 0.0.0-ci --package
 
-      - name: Verify App Bundle Structure & Signature
+      - name: Verify App Bundle Structure & Version
         run: |
           test -d Recall.app
           test -f Recall.app/Contents/MacOS/Recall
           test -f Recall.app/Contents/Info.plist
           test -f Recall.app/Contents/Resources/AppIcon.icns
+          
+          # Verify CFBundleShortVersionString matches the build version
+          PLIST_VER=$(plutil -extract CFBundleShortVersionString raw Recall.app/Contents/Info.plist)
+          echo "Resolved bundle version: $PLIST_VER"
+          test "$PLIST_VER" = "0.0.0-ci"
+          
+          # Verify code signature
           codesign -v Recall.app
+          
           echo "Binary architectures:"
           file Recall.app/Contents/MacOS/Recall
+
+      - name: Verify Distribution Artifacts
+        run: |
+          test -f dist/Recall-0.0.0-ci-macOS.zip
+          test -f dist/Recall-0.0.0-ci-macOS.dmg
+          test -f dist/checksums.txt
+          cat dist/checksums.txt
