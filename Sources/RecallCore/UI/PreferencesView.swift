@@ -1,0 +1,120 @@
+import SwiftUI
+import AppKit
+
+public struct PreferencesView: View {
+    @State private var rememberCount: Int
+    @State private var displayCount: Int
+    
+    public init() {
+        _rememberCount = State(initialValue: PreferencesManager.shared.rememberLimit)
+        _displayCount = State(initialValue: PreferencesManager.shared.displayLimit)
+    }
+    
+    public var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("General Settings")
+                .font(.headline)
+                .foregroundColor(.secondary)
+                .padding(.bottom, 2)
+            
+            VStack(spacing: 12) {
+                // Remember row
+                HStack(spacing: 10) {
+                    Text("Remember:")
+                        .frame(width: 85, alignment: .trailing)
+                        .font(.system(size: 13, weight: .regular))
+                    
+                    TextField("", value: $rememberCount, formatter: NumberFormatter())
+                        .frame(width: 55)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .multilineTextAlignment(.center)
+                        .onChange(of: rememberCount) { newValue in
+                            PreferencesManager.shared.rememberLimit = newValue
+                        }
+                    
+                    Stepper("", value: $rememberCount, in: 5...500, step: 5)
+                        .labelsHidden()
+                        .onChange(of: rememberCount) { newValue in
+                            PreferencesManager.shared.rememberLimit = newValue
+                        }
+                    
+                    Text("clippings")
+                        .font(.system(size: 13))
+                    
+                    Spacer()
+                }
+                
+                // Display row
+                HStack(spacing: 10) {
+                    Text("Display:")
+                        .frame(width: 85, alignment: .trailing)
+                        .font(.system(size: 13, weight: .regular))
+                    
+                    TextField("", value: $displayCount, formatter: NumberFormatter())
+                        .frame(width: 55)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .multilineTextAlignment(.center)
+                        .onChange(of: displayCount) { newValue in
+                            PreferencesManager.shared.displayLimit = newValue
+                        }
+                    
+                    Stepper("", value: $displayCount, in: 1...100, step: 5)
+                        .labelsHidden()
+                        .onChange(of: displayCount) { newValue in
+                            PreferencesManager.shared.displayLimit = newValue
+                        }
+                    
+                    Text("clippings")
+                        .font(.system(size: 13))
+                    
+                    Spacer()
+                }
+            }
+            .padding(.horizontal, 8)
+            
+            Divider()
+                .padding(.vertical, 4)
+            
+            HStack {
+                Text("Changes take effect immediately.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
+                Spacer()
+                
+                Button("Done") {
+                    PreferencesWindowController.shared.close()
+                }
+                .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding(20)
+        .frame(width: 320)
+    }
+}
+
+public final class PreferencesWindowController: NSWindowController {
+    public static let shared = PreferencesWindowController()
+    
+    private init() {
+        let hostingController = NSHostingController(rootView: PreferencesView())
+        let window = NSWindow(contentViewController: hostingController)
+        window.title = "Preferences"
+        window.styleMask = [.titled, .closable]
+        window.isReleasedWhenClosed = false
+        window.center()
+        
+        super.init(window: window)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    public func showPreferences() {
+        NSApp.activate(ignoringOtherApps: true)
+        window?.contentViewController = NSHostingController(rootView: PreferencesView())
+        window?.center()
+        window?.makeKeyAndOrderFront(nil)
+    }
+}
