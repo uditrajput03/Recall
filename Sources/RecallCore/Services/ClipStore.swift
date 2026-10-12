@@ -4,7 +4,12 @@ public final class ClipStore {
     public static let shared = ClipStore()
     
     public private(set) var items: [ClipItem] = []
-    public var maxCapacity: Int = 50
+    public var maxCapacity: Int = 50 {
+        didSet {
+            pruneExceedingCapacity()
+            onItemsChanged?()
+        }
+    }
     
     public var onItemsChanged: (() -> Void)?
     
@@ -40,6 +45,14 @@ public final class ClipStore {
         // 4. Prune unpinned items exceeding capacity
         pruneExceedingCapacity()
         
+        onItemsChanged?()
+    }
+    
+    /// Bumps an existing item to the top of its section when selected
+    public func promoteToTop(id: UUID) {
+        guard let index = items.firstIndex(where: { $0.id == id }) else { return }
+        let item = items.remove(at: index)
+        items.insert(item, at: 0)
         onItemsChanged?()
     }
     

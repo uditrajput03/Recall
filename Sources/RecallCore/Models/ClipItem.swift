@@ -27,37 +27,29 @@ public final class ClipItem: Identifiable, Equatable {
     // Hash for fast deduplication check
     public let contentHash: String
     
+    // Precomputed display title to avoid heavy re-computation during menu render
+    public let displayTitle: String
+    
     public init(content: ClipContent, isPinned: Bool = false) {
         self.id = UUID()
         self.content = content
-        self.createdAt = Date()
+        let now = Date()
+        self.createdAt = now
         self.isPinned = isPinned
+        
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        let timeStr = formatter.string(from: now)
         
         switch content {
         case let .text(str):
             let data = Data(str.utf8)
             let digest = SHA256.hash(data: data)
             self.contentHash = "txt:" + digest.compactMap { String(format: "%02x", $0) }.joined()
-        case let .image(data, _, _):
-            let digest = SHA256.hash(data: data)
-            self.contentHash = "img:" + digest.compactMap { String(format: "%02x", $0) }.joined()
-        }
-    }
-    
-    public static func == (lhs: ClipItem, rhs: ClipItem) -> Bool {
-        return lhs.id == rhs.id
-    }
-    
-    public var timeString: String {
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        return formatter.string(from: createdAt)
-    }
-    
-    public var displayTitle: String {
-        switch content {
-        case let .text(str):
-            let sanitized = str
+            
+            // Only inspect the first 200 characters to prevent freezing on large text clips
+            let previewSlice = String(str.prefix(200))
+            let sanitized = previewSlice
                 .components(separatedBy: .newlines)
                 .map { $0.trimmingCharacters(in: .whitespaces) }
                 .filter { !$0.isEmpty }
@@ -65,16 +57,24 @@ public final class ClipItem: Identifiable, Equatable {
             let maxLength = 50
             if sanitized.count > maxLength {
                 let index = sanitized.index(sanitized.startIndex, offsetBy: maxLength)
-                return String(sanitized[..<index]) + "…"
+                self.displayTitle = String(sanitized[..<index]) + "…"
             } else if sanitized.isEmpty {
-                return "(Empty text)"
+                self.displayTitle = "(Empty text)"
+            } else {
+                self.displayTitle = sanitized
             }
-            return sanitized
             
-        case let .image(_, dimensions, _):
+        case let .image(data, dimensions, _):
+            let digest = SHA256.hash(data: data)
+            self.contentHash = "img:" + digest.compactMap { String(format: "%02x", $0) }.joined()
+            
             let w = Int(dimensions.width)
             let h = Int(dimensions.height)
-            return "📷 \(w)×\(h) • \(timeString)"
+            self.displayTitle = "📷 \(w)×\(h) • \(timeStr)"
         }
+    }
+    
+    public static func == (lhs: ClipItem, rhs: ClipItem) -> Bool {
+        return lhs.id == rhs.id
     }
 }

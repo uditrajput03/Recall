@@ -134,12 +134,18 @@ public final class StatusMenuController: NSObject, NSMenuDelegate {
         primaryItem.representedObject = item
         
         switch item.content {
-        case .text:
+        case let .text(fullText):
             // Text clips have no icon — clean and plain like CopyClip
             primaryItem.image = nil
-        case let .image(_, _, thumbnail):
+            // Show preview tooltip on hover
+            primaryItem.toolTip = String(fullText.prefix(500))
+            
+        case let .image(_, dimensions, thumbnail):
             // Image clips show the thumbnail
             primaryItem.image = thumbnail
+            let w = Int(dimensions.width)
+            let h = Int(dimensions.height)
+            primaryItem.toolTip = "Image: \(w) × \(h) pixels"
         }
         
         menu.addItem(primaryItem)

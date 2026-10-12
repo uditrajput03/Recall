@@ -14,7 +14,7 @@ public enum ImageUtils {
         NSColor.controlBackgroundColor.withAlphaComponent(0.2).setFill()
         clipPath.fill()
         
-        // Calculate aspect-fill or aspect-fit rectangle
+        // Calculate aspect-fill rectangle
         let imageSize = image.size
         guard imageSize.width > 0 && imageSize.height > 0 else {
             resultImage.unlockFocus()
@@ -27,8 +27,9 @@ public enum ImageUtils {
         let drawX = (targetSize.width - scaledWidth) / 2.0
         let drawY = (targetSize.height - scaledHeight) / 2.0
         let drawRect = NSRect(x: drawX, y: drawY, width: scaledWidth, height: scaledHeight)
+        let sourceRect = NSRect(origin: .zero, size: imageSize)
         
-        image.draw(in: drawRect, from: .zero, operation: .sourceOver, fraction: 1.0)
+        image.draw(in: drawRect, from: sourceRect, operation: .sourceOver, fraction: 1.0)
         
         // Subtle border
         NSColor.separatorColor.setStroke()

@@ -49,6 +49,21 @@ final class RecallTests: XCTestCase {
         XCTAssertEqual(store.items[1].displayTitle, "Second")
     }
     
+    func testPromoteToTop() {
+        let store = ClipStore.shared
+        store.add(content: .text("Item 1"))
+        store.add(content: .text("Item 2"))
+        store.add(content: .text("Item 3"))
+        
+        guard let item1 = store.items.last else {
+            XCTFail("Missing item")
+            return
+        }
+        
+        store.promoteToTop(id: item1.id)
+        XCTAssertEqual(store.items.first?.id, item1.id)
+    }
+    
     func testPinAndUnpin() {
         let store = ClipStore.shared
         store.add(content: .text("Important Note"))
@@ -90,6 +105,19 @@ final class RecallTests: XCTestCase {
         XCTAssertEqual(store.recentItems.count, 3)
     }
     
+    func testDynamicMaxCapacityReduction() {
+        let store = ClipStore.shared
+        store.maxCapacity = 10
+        for i in 1...10 {
+            store.add(content: .text("Item \(i)"))
+        }
+        XCTAssertEqual(store.items.count, 10)
+        
+        // Changing maxCapacity downwards should prune immediately
+        store.maxCapacity = 4
+        XCTAssertEqual(store.items.count, 4)
+    }
+    
     func testClearUnpinned() {
         let store = ClipStore.shared
         store.add(content: .text("Keep Me"))
@@ -129,6 +157,13 @@ final class RecallTests: XCTestCase {
         
         let clipItem = ClipItem(content: .image(data: dummyData, dimensions: size, thumbnail: dummyImage))
         XCTAssertTrue(clipItem.displayTitle.contains("📷 1920×1080"))
+    }
+    
+    func testMassiveTextPerformance() {
+        let massiveString = String(repeating: "Line of text with many words\n", count: 10_000)
+        let clip = ClipItem(content: .text(massiveString))
+        XCTAssertFalse(clip.displayTitle.isEmpty)
+        XCTAssertTrue(clip.displayTitle.hasSuffix("…"))
     }
     
     // MARK: - Clipboard Monitor Writing

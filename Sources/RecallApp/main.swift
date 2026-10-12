@@ -19,4 +19,5 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 let app = NSApplication.shared
 let delegate = AppDelegate()
 app.delegate = delegate
+_ = delegate // Keep strong reference for lifetime of process
 app.run()

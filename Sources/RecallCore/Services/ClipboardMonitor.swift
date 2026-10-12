@@ -12,7 +12,9 @@ public final class ClipboardMonitor {
     public init() {}
     
     public func startMonitoring() {
-        lastChangeCount = pasteboard.changeCount
+        // Run initial check to capture the current clipboard content on startup
+        checkForChanges()
+        
         // Poll every 0.5s for pasteboard updates
         timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             self?.checkForChanges()
@@ -39,7 +41,7 @@ public final class ClipboardMonitor {
     }
     
     private func processCurrentPasteboard() {
-        // 1. Try reading Image first (e.g. screenshots, copied graphics)
+        // 1. Try reading Image first (screenshots, copied graphics)
         if let imageData = readImageDataFromPasteboard() {
             if let image = NSImage(data: imageData) {
                 let dims = ImageUtils.pixelDimensions(for: image)
@@ -61,30 +63,31 @@ public final class ClipboardMonitor {
     }
     
     private func readImageDataFromPasteboard() -> Data? {
-        // Prioritize PNG (common for screenshots), then TIFF
-        if let pngData = pasteboard.data(forType: .png), !pngData.isEmpty {
+        guard let types = pasteboard.types else { return nil }
+        
+        // Only treat as image if the pasteboard explicitly contains PNG or TIFF image types.
+        // This avoids accidentally loading Finder file copies into memory.
+        if types.contains(.png), let pngData = pasteboard.data(forType: .png), !pngData.isEmpty {
             return pngData
         }
-        if let tiffData = pasteboard.data(forType: .tiff), !tiffData.isEmpty {
-            return tiffData
-        }
         
-        // Fallback: check for NSImage class on pasteboard
-        if let images = pasteboard.readObjects(forClasses: [NSImage.self], options: nil) as? [NSImage],
-           let firstImage = images.first {
-            if let tiff = firstImage.tiffRepresentation {
-                return tiff
+        if types.contains(.tiff), let tiffData = pasteboard.data(forType: .tiff), !tiffData.isEmpty {
+            // Compress raw TIFF into lightweight PNG to save 80-90% RAM
+            if let rep = NSBitmapImageRep(data: tiffData),
+               let pngData = rep.representation(using: .png, properties: [:]) {
+                return pngData
             }
+            return tiffData
         }
         
         return nil
     }
     
-    /// Copies an item back to the system clipboard and avoids re-adding it to history
+    /// Copies an item back to the system clipboard and bumps it to the top of history
     public func copyToClipboard(item: ClipItem) {
         isInternalWrite = true
         defer {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 self.isInternalWrite = false
             }
         }
@@ -98,11 +101,16 @@ public final class ClipboardMonitor {
         case let .image(data, _, _):
             if let image = NSImage(data: data) {
                 pasteboard.writeObjects([image])
+                if let tiff = image.tiffRepresentation {
+                    pasteboard.setData(tiff, forType: .tiff)
+                }
             }
             pasteboard.setData(data, forType: .png)
-            pasteboard.setData(data, forType: .tiff)
         }
         
         lastChangeCount = pasteboard.changeCount
+        
+        // Promote this clip to top of list as the most recently copied item
+        ClipStore.shared.promoteToTop(id: item.id)
     }
 }

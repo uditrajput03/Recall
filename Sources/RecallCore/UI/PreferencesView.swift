@@ -29,13 +29,15 @@ public struct PreferencesView: View {
                         .textFieldStyle(RoundedBorderTextFieldStyle())
                         .multilineTextAlignment(.center)
                         .onChange(of: rememberCount) { newValue in
-                            PreferencesManager.shared.rememberLimit = newValue
+                            let clamped = max(5, min(newValue, 1000))
+                            PreferencesManager.shared.rememberLimit = clamped
                         }
                     
                     Stepper("", value: $rememberCount, in: 5...500, step: 5)
                         .labelsHidden()
                         .onChange(of: rememberCount) { newValue in
-                            PreferencesManager.shared.rememberLimit = newValue
+                            let clamped = max(5, min(newValue, 1000))
+                            PreferencesManager.shared.rememberLimit = clamped
                         }
                     
                     Text("clippings")
@@ -55,13 +57,15 @@ public struct PreferencesView: View {
                         .textFieldStyle(RoundedBorderTextFieldStyle())
                         .multilineTextAlignment(.center)
                         .onChange(of: displayCount) { newValue in
-                            PreferencesManager.shared.displayLimit = newValue
+                            let clamped = max(1, min(newValue, 100))
+                            PreferencesManager.shared.displayLimit = clamped
                         }
                     
                     Stepper("", value: $displayCount, in: 1...100, step: 5)
                         .labelsHidden()
                         .onChange(of: displayCount) { newValue in
-                            PreferencesManager.shared.displayLimit = newValue
+                            let clamped = max(1, min(newValue, 100))
+                            PreferencesManager.shared.displayLimit = clamped
                         }
                     
                     Text("clippings")
@@ -81,6 +85,13 @@ public struct PreferencesView: View {
                     .foregroundColor(.secondary)
                 
                 Spacer()
+                
+                // Hidden button to handle Escape key
+                Button("") {
+                    PreferencesWindowController.shared.close()
+                }
+                .keyboardShortcut(.cancelAction)
+                .hidden()
                 
                 Button("Done") {
                     PreferencesWindowController.shared.close()
