@@ -137,23 +137,29 @@ final class RecallTests: XCTestCase {
     // MARK: - Image Handling & Utils Tests
     
     func testImageThumbnailGeneration() {
-        // Create a 200x100 dummy bitmap image
-        let size = NSSize(width: 200, height: 100)
-        let image = NSImage(size: size)
-        image.lockFocus()
-        NSColor.systemRed.setFill()
-        NSRect(origin: .zero, size: size).fill()
-        image.unlockFocus()
+        // 1. Test 16:9 widescreen screenshot
+        let wideImage = NSImage(size: NSSize(width: 1920, height: 1080))
+        let wideThumbnail = ImageUtils.createThumbnail(from: wideImage)
+        XCTAssertEqual(wideThumbnail.size.height, 36.0)
+        XCTAssertEqual(wideThumbnail.size.width, 64.0) // 36 * (16/9) = 64
         
-        let thumbnail = ImageUtils.createThumbnail(from: image, targetSize: NSSize(width: 36, height: 36))
-        XCTAssertEqual(thumbnail.size.width, 36)
-        XCTAssertEqual(thumbnail.size.height, 36)
+        // 2. Test Square image
+        let squareImage = NSImage(size: NSSize(width: 500, height: 500))
+        let squareThumbnail = ImageUtils.createThumbnail(from: squareImage)
+        XCTAssertEqual(squareThumbnail.size.height, 36.0)
+        XCTAssertEqual(squareThumbnail.size.width, 36.0)
+        
+        // 3. Test Ultrawide image clamped to maxWidth
+        let ultrawideImage = NSImage(size: NSSize(width: 3440, height: 1440))
+        let ultrawideThumbnail = ImageUtils.createThumbnail(from: ultrawideImage)
+        XCTAssertEqual(ultrawideThumbnail.size.height, 36.0)
+        XCTAssertEqual(ultrawideThumbnail.size.width, ImageUtils.maxWidth)
     }
     
     func testImageClipItemFormatting() {
         let size = CGSize(width: 1920, height: 1080)
         let dummyData = "dummy_png_bytes".data(using: .utf8)!
-        let dummyImage = NSImage(size: NSSize(width: 36, height: 36))
+        let dummyImage = NSImage(size: NSSize(width: 64, height: 36))
         
         let clipItem = ClipItem(content: .image(data: dummyData, dimensions: size, thumbnail: dummyImage))
         XCTAssertTrue(clipItem.displayTitle.contains("📷 1920×1080"))

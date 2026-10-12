@@ -1,13 +1,28 @@
 import AppKit
 
 public enum ImageUtils {
-    /// Creates a crisp square thumbnail with rounded corners for display in NSMenuItem.
-    public static func createThumbnail(from image: NSImage, targetSize: NSSize = NSSize(width: 36, height: 36)) -> NSImage {
+    public static let fixedHeight: CGFloat = 36.0
+    public static let minWidth: CGFloat = 24.0
+    public static let maxWidth: CGFloat = 72.0
+    
+    /// Creates a crisp thumbnail with fixed height (36pt) and proportional aspect-ratio width for display in NSMenuItem.
+    public static func createThumbnail(from image: NSImage, targetHeight: CGFloat = fixedHeight) -> NSImage {
+        let imageSize = image.size
+        let targetWidth: CGFloat
+        if imageSize.width > 0 && imageSize.height > 0 {
+            let aspect = imageSize.width / imageSize.height
+            let calculated = targetHeight * aspect
+            targetWidth = max(minWidth, min(calculated, maxWidth))
+        } else {
+            targetWidth = targetHeight
+        }
+        
+        let targetSize = NSSize(width: targetWidth, height: targetHeight)
         let resultImage = NSImage(size: targetSize)
         resultImage.lockFocus()
         
         let rect = NSRect(origin: .zero, size: targetSize)
-        let clipPath = NSBezierPath(roundedRect: rect, xRadius: 5, yRadius: 5)
+        let clipPath = NSBezierPath(roundedRect: rect, xRadius: 4, yRadius: 4)
         clipPath.addClip()
         
         // Background fill to make transparent images (like PNG icons/diagrams) visible in dark & light menu bar
@@ -15,7 +30,6 @@ public enum ImageUtils {
         clipPath.fill()
         
         // Calculate aspect-fill rectangle
-        let imageSize = image.size
         guard imageSize.width > 0 && imageSize.height > 0 else {
             resultImage.unlockFocus()
             return resultImage
