@@ -7,7 +7,12 @@ public struct PreferencesView: View {
     @State private var launchAtLogin: Bool
     
     private var appVersion: String {
-        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
+        let raw = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.lowercased().hasPrefix("v") {
+            return String(trimmed.dropFirst())
+        }
+        return trimmed
     }
     
     public init() {

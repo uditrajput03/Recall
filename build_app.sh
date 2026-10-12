@@ -1,9 +1,9 @@
 #!/bin/bash
 set -e
 
-# Version handling (defaults to 1.0.0, strips leading 'v' if passed e.g. v1.2.3 -> 1.2.3)
+# Version handling (defaults to 1.0.0, strips leading 'v' or 'V' if passed e.g. v1.2.3 / V1.2.3 -> 1.2.3)
 RAW_VERSION="${1:-1.0.0}"
-VERSION="${RAW_VERSION#v}"
+VERSION="${RAW_VERSION#[vV]}"
 
 # Check for --package flag in any argument position
 PACKAGE_FLAG=false
@@ -83,7 +83,7 @@ cat << EOF > "$CONTENTS_DIR/Info.plist"
 </plist>
 EOF
 
-echo "🔏 Applying ad-hoc code signature..."
+echo "🔐 Applying ad-hoc code signature..."
 codesign --force --deep --sign - "$BUNDLE_DIR"
 codesign -v "$BUNDLE_DIR"
 
