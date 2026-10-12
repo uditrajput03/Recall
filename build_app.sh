@@ -43,6 +43,12 @@ mkdir -p "$RESOURCES_DIR"
 cp "$BINARY_PATH" "$MACOS_DIR/$APP_NAME"
 chmod +x "$MACOS_DIR/$APP_NAME"
 
+# Copy official AppIcon if present
+if [ -f "Resources/AppIcon.icns" ]; then
+    echo "🎨 Bundling official AppIcon.icns..."
+    cp "Resources/AppIcon.icns" "$RESOURCES_DIR/AppIcon.icns"
+fi
+
 # Create Info.plist (LSUIElement=true ensures it runs strictly as a menu bar app)
 cat << EOF > "$CONTENTS_DIR/Info.plist"
 <?xml version="1.0" encoding="UTF-8"?>
@@ -63,6 +69,10 @@ cat << EOF > "$CONTENTS_DIR/Info.plist"
     <string>${VERSION}</string>
     <key>CFBundleVersion</key>
     <string>${VERSION}</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
+    <key>CFBundleIconName</key>
+    <string>AppIcon</string>
     <key>LSMinimumSystemVersion</key>
     <string>12.0</string>
     <key>LSUIElement</key>
@@ -73,7 +83,11 @@ cat << EOF > "$CONTENTS_DIR/Info.plist"
 </plist>
 EOF
 
-echo "✅ App bundle created at $BUNDLE_DIR (Version: ${VERSION})"
+echo "🔏 Applying ad-hoc code signature..."
+codesign --force --deep --sign - "$BUNDLE_DIR"
+codesign -v "$BUNDLE_DIR"
+
+echo "✅ App bundle created and signed at $BUNDLE_DIR (Version: ${VERSION})"
 
 if [ "$PACKAGE_FLAG" = true ]; then
     DIST_DIR="dist"

@@ -1,50 +1,58 @@
-# Recall
+# Recall 📎
 
-A lightweight macOS menu bar clipboard manager inspired by CopyClip, with support for text and screenshots.
+A native, lightweight macOS clipboard manager built with Swift and AppKit. Inspired by **CopyClip**, with first-class support for **screenshots & images**.
 
-## Features
+![macOS 12+](https://img.shields.io/badge/macOS-12%2B-blue)
+![Swift 5.8+](https://img.shields.io/badge/Swift-5.8%2B-orange)
+![Pure Native](https://img.shields.io/badge/UI-AppKit%20%26%20NSMenu-green)
 
-- **Text & Screenshots**: Captures copied text and screenshots automatically.
-- **Image Previews**: Shows resolution metadata and thumbnails for copied images.
-- **Pinning**: Hold `Option` and click any clip to pin it so it isn't pruned when history fills up.
-- **Configurable Limits**: Set how many items to remember and display in Preferences (`Cmd + ,`).
-- **In-Memory History**: Clips are stored only in memory and reset when the app quits.
-- **Menu Bar Only**: Runs in the background without cluttering the Dock (`LSUIElement`).
+---
 
-## Installation
+## ✨ Features
 
-Download the latest `.dmg` or `.zip` from the [Releases](https://github.com/uditrajput03/Recall/releases) page, or build from source.
+- **App Icon**: Matte Black squircle with a clean white paperclip wire.
+- **Text & Screenshot Support**: Automatically captures copied text and screenshots (e.g. `Cmd + Ctrl + Shift + 4`).
+- **Aspect-Ratio Thumbnails**: Renders proportional thumbnails with fixed 36pt height and resolution metadata (`📷 1920×1080 • 12:30 PM`).
+- **Classic CopyClip Menu Bar Dropdown**: Lives directly in your macOS menu bar with zero window clutter.
+- **Light Paperclip Icon**: Elegant, slim **Light** weight paperclip SF Symbol (`.light`).
+- **Direct Copying**: Click any item to copy it back to your pasteboard.
+- **Clean List Display**: Uncluttered clip items without number prefixes or unnecessary text icons.
+- **📌 Pin / Unpin Favorites**: Hold `⌥ Option` while clicking any item to pin it so it never gets pruned.
+- **Clear Unpinned Clips**: Single **Clear** button that clears all unpinned items while keeping your pinned items intact.
+- **⚙️ Preferences Popup**: Lightweight popup settings window matching CopyClip's design:
+  - `Remember: [ 100 ] clippings`
+  - `Display:  [ 30 ] clippings`
+- **In-Memory Storage**: Zero disk clutter; history clears automatically when you restart.
+- **Capacity Management**: Configurable history depth with automatic FIFO eviction for unpinned items.
+- **Native Menubar Agent**: Configured with `LSUIElement = true` (no Dock icon).
 
-## Building from Source
+---
 
-Requires macOS 12+ and Swift 5.8+ (Xcode 14+).
+## 🚀 Quick Start
 
-### Build App Bundle
+### Build and Launch via Script
 ```bash
 ./build_app.sh
 open Recall.app
 ```
 
-To build and package release artifacts (`.dmg` and `.zip`):
-```bash
-./build_app.sh 1.0.0 --package
-```
-
-### Run via Swift CLI
+### Or Run via Swift CLI
 ```bash
 swift run Recall
 ```
 
-### Run Tests
+### Running Tests
 ```bash
 swift test
 ```
 
-## Usage
+---
 
-- Click the menu bar icon to view recent clippings.
-- **Copy**: Click any clipping to copy it back to your pasteboard (moves it to the top).
-- **Pin / Unpin**: Hold `Option` while clicking an item.
-- **Preferences**: Press `Cmd + ,` or select **Preferences…**.
-- **Clear History**: Click **Clear Unpinned History** (pinned clippings remain saved).
-- **Quit**: Select **Quit** or press `Cmd + Q`.
+## ⌨️ How to Use
+
+1. Click the 📎 icon in your macOS top menu bar.
+2. **Copy a Clip**: Click any clip to copy it to clipboard (promotes item to top).
+3. **Pin a Clip**: Hold `⌥ Option` and click the clip (the title will switch to `📌 Pin: ...`).
+4. **Open Preferences**: Press `Cmd + ,` or click `Preferences…` to configure `Remember` and `Display` limits.
+5. **Clear History**: Click `Clear` to remove all unpinned clippings (pinned clips are preserved).
+6. **Quit**: Press `Cmd + Q` or select `Quit`.

@@ -194,4 +194,10 @@ final class RecallTests: XCTestCase {
         prefs.displayLimit = 25
         XCTAssertEqual(prefs.displayLimit, 25)
     }
+    
+    func testLaunchAtLoginPreference() {
+        let prefs = PreferencesManager.shared
+        prefs.launchAtLogin = false
+        XCTAssertFalse(prefs.launchAtLogin)
+    }
 }

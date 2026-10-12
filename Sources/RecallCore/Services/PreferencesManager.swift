@@ -1,4 +1,5 @@
 import Foundation
+import ServiceManagement
 
 public final class PreferencesManager {
     public static let shared = PreferencesManager()
@@ -8,6 +9,7 @@ public final class PreferencesManager {
     private enum Keys {
         static let rememberLimit = "rememberLimit"
         static let displayLimit = "displayLimit"
+        static let launchAtLogin = "launchAtLogin"
     }
     
     public var onPreferencesChanged: (() -> Void)?
@@ -33,6 +35,41 @@ public final class PreferencesManager {
         set {
             let clamped = max(1, min(newValue, 100))
             userDefaults.set(clamped, forKey: Keys.displayLimit)
+            onPreferencesChanged?()
+        }
+    }
+    
+    public var launchAtLogin: Bool {
+        get {
+            if #available(macOS 13.0, *) {
+                let status = SMAppService.mainApp.status
+                if status == .enabled {
+                    return true
+                } else if status == .notFound {
+                    return userDefaults.bool(forKey: Keys.launchAtLogin)
+                }
+                return false
+            } else {
+                return userDefaults.bool(forKey: Keys.launchAtLogin)
+            }
+        }
+        set {
+            userDefaults.set(newValue, forKey: Keys.launchAtLogin)
+            if #available(macOS 13.0, *) {
+                do {
+                    if newValue {
+                        if SMAppService.mainApp.status != .enabled {
+                            try SMAppService.mainApp.register()
+                        }
+                    } else {
+                        if SMAppService.mainApp.status == .enabled {
+                            try SMAppService.mainApp.unregister()
+                        }
+                    }
+                } catch {
+                    print("Notice: SMAppService configuration: \(error.localizedDescription)")
+                }
+            }
             onPreferencesChanged?()
         }
     }

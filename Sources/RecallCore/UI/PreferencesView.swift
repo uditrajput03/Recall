@@ -4,10 +4,12 @@ import AppKit
 public struct PreferencesView: View {
     @State private var rememberCount: Int
     @State private var displayCount: Int
+    @State private var launchAtLogin: Bool
     
     public init() {
         _rememberCount = State(initialValue: PreferencesManager.shared.rememberLimit)
         _displayCount = State(initialValue: PreferencesManager.shared.displayLimit)
+        _launchAtLogin = State(initialValue: PreferencesManager.shared.launchAtLogin)
     }
     
     public var body: some View {
@@ -73,6 +75,21 @@ public struct PreferencesView: View {
                     
                     Spacer()
                 }
+                
+                // Launch at Login row
+                HStack(spacing: 10) {
+                    Text("")
+                        .frame(width: 85)
+                    
+                    Toggle("Launch at Login", isOn: $launchAtLogin)
+                        .font(.system(size: 13, weight: .regular))
+                        .onChange(of: launchAtLogin) { newValue in
+                            PreferencesManager.shared.launchAtLogin = newValue
+                        }
+                    
+                    Spacer()
+                }
+                .padding(.top, 2)
             }
             .padding(.horizontal, 8)
             
@@ -80,9 +97,13 @@ public struct PreferencesView: View {
                 .padding(.vertical, 4)
             
             HStack {
-                Text("Changes take effect immediately.")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                Link(destination: URL(string: "https://github.com/uditrajput03/Recall")!) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.up.forward.app")
+                        Text("GitHub Repository")
+                    }
+                    .font(.system(size: 12))
+                }
                 
                 Spacer()
                 
@@ -100,7 +121,7 @@ public struct PreferencesView: View {
             }
         }
         .padding(20)
-        .frame(width: 320)
+        .frame(width: 340)
     }
 }
 

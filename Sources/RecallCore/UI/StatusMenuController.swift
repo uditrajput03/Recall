@@ -102,17 +102,13 @@ public final class StatusMenuController: NSObject, NSMenuDelegate {
         menu.addItem(NSMenuItem.separator())
         
         // 3. ACTIONS & CONTROLS
-        if !allRecents.isEmpty {
-            let clearItem = NSMenuItem(title: "Clear Unpinned History", action: #selector(handleClearHistory), keyEquivalent: "")
-            clearItem.target = self
-            menu.addItem(clearItem)
-        }
+        let clearItem = NSMenuItem(title: "Clear", action: #selector(handleClear), keyEquivalent: "")
+        clearItem.target = self
+        clearItem.isEnabled = !allRecents.isEmpty
+        menu.addItem(clearItem)
         
-        if !store.items.isEmpty {
-            let clearAllItem = NSMenuItem(title: "Clear All History", action: #selector(handleClearAll), keyEquivalent: "")
-            clearAllItem.target = self
-            menu.addItem(clearAllItem)
-        }
+        // Separator between Clear and Preferences
+        menu.addItem(NSMenuItem.separator())
         
         // Preferences popup item (Cmd + ,)
         let prefItem = NSMenuItem(title: "Preferences…", action: #selector(handleOpenPreferences), keyEquivalent: ",")
@@ -177,12 +173,8 @@ public final class StatusMenuController: NSObject, NSMenuDelegate {
         store.togglePin(id: item.id)
     }
     
-    @objc private func handleClearHistory() {
+    @objc private func handleClear() {
         store.clearUnpinned()
-    }
-    
-    @objc private func handleClearAll() {
-        store.clearAll()
     }
     
     @objc private func handleOpenPreferences() {
